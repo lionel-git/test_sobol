@@ -54,6 +54,8 @@
 #include <iomanip>
 #include <fstream>
 
+#include <set>
+
 using namespace std;
 
 // ----- SOBOL POINTS GENERATOR BASED ON GRAYCODE ORDER -----------------
@@ -71,7 +73,7 @@ using namespace std;
 //
 // ----------------------------------------------------------------------
 
-double **sobol_points(unsigned N, unsigned D, char *dir_file)
+double **sobol_points(unsigned N, unsigned D, const char *dir_file)
 {
   ifstream infile(dir_file,ios::in);
   if (!infile) {
@@ -165,28 +167,65 @@ double **sobol_points(unsigned N, unsigned D, char *dir_file)
   return POINTS;
 }
 
-
-int main(int argc, char **argv)
+void display_points(double** P, int N, int D)
 {
-  if (argc != 4) {
-    cout << endl << "input format: sobol N D FILENAME" << endl << endl;
-    cout << "The program prints the first N sobol points in D dimensions." << endl;
-    cout << "The points are generated in graycode order." << endl;
-    cout << "The primitive polynomials and initial direction numbers are" << endl
-	 << "given by the input file FILENAME." << endl << endl;
-    return 0;
-  }
-
-  int N = atoi(argv[1]);
-  int D = atoi(argv[2]);
-  double **P = sobol_points(N,D,argv[3]); 
-
-  // display points
-  cout << setprecision(20);
-  //cout << setiosflags(ios::scientific) << setprecision(10);
-  for (unsigned i=0;i<=N-1;i++) {
-    for (unsigned j=0;j<=D-1;j++) cout << P[i][j] << " " ;
+    // display points
+    cout << setprecision(20);
+    //cout << setiosflags(ios::scientific) << setprecision(10);
+    for (unsigned i = 0; i <= N - 1; i++) {
+        for (unsigned j = 0; j <= D - 1; j++) cout << P[i][j] << " ";
+        cout << endl;
+    }
     cout << endl;
-  }
-  cout << endl;
+}
+
+void display_points_dim_k(double** P, int N, int k)
+{
+   
+
+    std::set<double> s;
+    // display points
+    cout << setprecision(20);
+    //cout << setiosflags(ios::scientific) << setprecision(10);
+    for (unsigned i = 0; i <= N - 1; i++) {
+        s.insert(P[i][k]);
+    }
+
+    int i = 0;
+    for (const auto x : s)
+    {
+        double delta = std::abs((x - (double)i / N));
+        if (delta > 1e-10)
+        {
+            std::cout << "Error? " << k << std::endl;
+        }
+        ++i;
+    }
+}
+
+void test_distrib()
+{
+    const char* filename = "joe-kuo-old.1111";
+    const char* filename2 = "new-joe-kuo-6.21201";
+    
+    int N = 16384;
+    int D = 14000;
+
+    if (N & (N - 1))
+    {
+        std::cout << "Error: N is not a power of 2" << std::endl;
+        return;
+    }
+
+    double** P = sobol_points(N, D, filename);
+
+    for (int k = 0; k < D; k++)
+        display_points_dim_k(P, N, k);
+
+}
+
+
+int main(int argc, char** argv)
+{
+    test_distrib();
 }
